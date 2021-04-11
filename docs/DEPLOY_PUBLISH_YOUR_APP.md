@@ -55,7 +55,7 @@ $ heroku run -a=<your_app_name> pipenv run upgrade
 
 Commit and push to heroku, make sure you have added and commited your changes and push to heroku
 ```sh
-$ git push heroku main
+$ git push heroku main hh
 ```
 
 ## That is it!
