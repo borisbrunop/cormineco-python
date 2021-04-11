@@ -9,12 +9,17 @@ from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
 from models import db, User
+# import Cloudinary as cloudinary_utils
+# from Cloudinary.uploader import upload
+import cloudinary
+import uuid
 #from models import Person
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config.from_mapping(CLOUDINARY_URL=os.environ.get('CLOUDINARY_URL'))
 MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
@@ -38,6 +43,80 @@ def handle_hello():
     }
 
     return jsonify(response_body), 200
+
+@app.route('/images', methods=['POST'])
+def handle_images():
+        body = request.json
+        # image = CloudinaryImage("https://res.cloudinary.com/cormineco/image/upload/v1618091325/cormineco/residuos_waru5q.jpg").image(type="fetch")
+        
+        if body is None:
+            return jsonify({
+                "result" : "missing request body"
+
+            }), 400
+
+        if "folder" not in body:
+            return jsonify({
+                "result": "missing fields in request body"
+            }), 400
+
+        if "folder" in body:
+            if body["folder"] == "inicio":
+                result = cloudinary.Search().expression('folder:"inicio"').max_results('10').execute()
+                resources = result["resources"]
+                response = []
+                for image in resources:
+                    response.append({"image_url": image["url"], "name": image["filename"]})
+                    
+                return jsonify(response), 200
+            if body["folder"] == "cormineco":
+                result = cloudinary.Search().expression('folder:"cormineco"').max_results('10').execute()
+                return jsonify(result), 200
+            if body["folder"] == "compromiso":
+                result = cloudinary.Search().expression('folder:"compromiso"').max_results('10').execute()
+                return jsonify(result), 200
+            if body["folder"] == "alcance":
+                result = cloudinary.Search().expression('folder:"alcance"').max_results('10').execute()
+                return jsonify(result), 200
+            if body["folder"] == "contacto":
+                result = cloudinary.Search().expression('folder:"contacto"').max_results('10').execute()
+                return jsonify(result), 200
+        return jsonify({
+            "result" : "missing fields in request body folder"
+        }), 400
+
+
+
+@app.route('/admin', methods=['POST'])
+def handle_password():
+
+    request_body = request.json
+
+    if request_body is None:
+        return jsonify({
+            "result" : "missing request body"
+
+        }), 400
+
+    if "pass" not in request_body:
+        return jsonify({
+            "result": "missing fields in request body"
+        }), 400
+
+    if "pass" in request_body:
+        unique_id = uuid.uuid4()
+        password = os.environ.get("ADMIN_PASS")
+
+        if password == request_body["pass"]:
+
+            return jsonify({
+                "id": unique_id
+            }), 200
+
+        else:
+            return jsonify({
+                "error": "password incorrect"
+            }), 400
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
