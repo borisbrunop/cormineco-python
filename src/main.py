@@ -71,16 +71,36 @@ def handle_images():
                 return jsonify(response), 200
             if body["folder"] == "cormineco":
                 result = cloudinary.Search().expression('folder:"cormineco"').max_results('10').execute()
-                return jsonify(result), 200
+                resources = result["resources"]
+                response = []
+                for image in resources:
+                    response.append({"image_url": image["url"], "name": image["filename"]})
+                    
+                return jsonify(response), 200
             if body["folder"] == "compromiso":
                 result = cloudinary.Search().expression('folder:"compromiso"').max_results('10').execute()
-                return jsonify(result), 200
+                resources = result["resources"]
+                response = []
+                for image in resources:
+                    response.append({"image_url": image["url"], "name": image["filename"]})
+                    
+                return jsonify(response), 200
             if body["folder"] == "alcance":
                 result = cloudinary.Search().expression('folder:"alcance"').max_results('10').execute()
-                return jsonify(result), 200
+                resources = result["resources"]
+                response = []
+                for image in resources:
+                    response.append({"image_url": image["url"], "name": image["filename"]})
+                    
+                return jsonify(response), 200
             if body["folder"] == "contacto":
                 result = cloudinary.Search().expression('folder:"contacto"').max_results('10').execute()
-                return jsonify(result), 200
+                resources = result["resources"]
+                response = []
+                for image in resources:
+                    response.append({"image_url": image["url"], "name": image["filename"]})
+                    
+                return jsonify(response), 200
         return jsonify({
             "result" : "missing fields in request body folder"
         }), 400
