@@ -2,18 +2,28 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 import os
-from flask import Flask, request, jsonify, url_for
+from flask import Flask, request, jsonify, url_for, render_template, redirect
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS
-from utils import APIException, generate_sitemap
+from utils import APIException
 from admin import setup_admin
 from models import db, User
 # import Cloudinary as cloudinary_utils
 # from Cloudinary.uploader import upload
 import cloudinary
 import uuid
+from flask_admin.contrib.sqla import ModelView
+from flask_login import LoginManager, current_user, login_user, logout_user
 #from models import Person
+
+
+class MyModelView(ModelView):
+    def is_accessible(self):
+        user = User.query.get(1)
+        # print(user.is_active())
+        return user.active
+
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -23,7 +33,13 @@ app.config.from_mapping(CLOUDINARY_URL=os.environ.get('CLOUDINARY_URL'))
 MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
-setup_admin(app)
+setup_admin(app, MyModelView)
+login = LoginManager(app)
+# login.init_app(app)
+
+@login.user_loader
+def load_user(user_id):
+    return User.query.get(user_id)
 
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
@@ -33,16 +49,56 @@ def handle_invalid_usage(error):
 # generate sitemap with all your endpoints
 @app.route('/')
 def sitemap():
-    return generate_sitemap(app)
+    return render_template('index.html')
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
+@app.route('/check')
+def check():
+    user = User.query.get(1)
+    return user.serialize()
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+@app.route('/logout', methods=['PATCH'])
+def logout():
+    user = User.query.get(1)
+    body = request.json
+    print(body)
+    user.update_user(body)
+    try: 
+        db.session.commit()
+        return "logout", 200
+    except Exception as error:
+        db.session.rollback()
+        print(f"{error.args} {type(error)}")
+        return jsonify({
+            "result": f"{error.args}"
+        }), 500
 
-    return jsonify(response_body), 200
+@app.route('/login', methods=['POST'])
+def login():
+    body = request.form.getlist('active')
+    password = os.environ.get("ADMIN_PASS")
+    if body[0] == password:
+        res = {'active': True}
+        user = User.query.get(1)
+        user.update_user(res)
+        try: 
+            db.session.commit()
+            return redirect("http://0.0.0.0:3000/admin", code=302)
+        except Exception as error:
+            db.session.rollback()
+            print(f"{error.args} {type(error)}")
+            return jsonify({
+                "result": f"{error.args}"
+            }), 500
+    if body[0] == "":
+        return jsonify({
+            "error" : "error"
+        }), 400
+    if body[0] != password:
+        return jsonify({
+            "error" : "not"
+        }), 400
+
+
 
 @app.route('/images', methods=['POST'])
 def handle_images():
@@ -111,6 +167,8 @@ def handle_images():
 def handle_password():
 
     request_body = request.json
+
+    print(request_body)
 
     if request_body is None:
         return jsonify({
