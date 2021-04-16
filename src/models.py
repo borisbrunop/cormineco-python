@@ -10,8 +10,25 @@ class User(db.Model, UserMixin):
     active = db.Column(db.Boolean(), unique=False, nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
 
+    def __init__(self, email, password, active):
+        self.email = email
+        self.password = password
+        self.active = active
+
+
+
     def __repr__(self):
         return '<User %r>' % self.email
+
+
+    @classmethod
+    def admin(cls, email, password, active):
+        new = cls(
+            email,
+            password,
+            active
+        )
+        return new
 
     def serialize(self):
         return {
@@ -21,9 +38,6 @@ class User(db.Model, UserMixin):
             # do not serialize the password, its a security breach
         }
 
-    def check(self):
-        return str(self.is_active())
-    
     
     def update_user(self, response):
         for (key, value) in response.items():

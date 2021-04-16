@@ -79,16 +79,29 @@ def login():
     if body[0] == password:
         res = {'active': True}
         user = User.query.get(1)
-        user.update_user(res)
-        try: 
-            db.session.commit()
-            return redirect("http://0.0.0.0:3000/admin", code=302)
-        except Exception as error:
-            db.session.rollback()
-            print(f"{error.args} {type(error)}")
-            return jsonify({
-                "result": f"{error.args}"
-            }), 500
+        if user == None:
+            new = User.admin("borisbruno88@gmail.com", 1234, True)
+            db.session.add(new)
+            try: 
+                db.session.commit()
+                return redirect("http://0.0.0.0:3000/admin", code=302)
+            except Exception as error:
+                db.session.rollback()
+                print(f"{error.args} {type(error)}")
+                return jsonify({
+                    "result": f"{error.args}"
+                }), 500
+        if user != None:
+            user.update_user(res)
+            try: 
+                db.session.commit()
+                return redirect("http://0.0.0.0:3000/admin", code=302)
+            except Exception as error:
+                db.session.rollback()
+                print(f"{error.args} {type(error)}")
+                return jsonify({
+                    "result": f"{error.args}"
+                }), 500
     if body[0] == "":
         return jsonify({
             "error" : "error"
