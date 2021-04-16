@@ -20,6 +20,7 @@ mysqlclient = "*"
 flask-admin = "*"
 cloudinary = "*"
 flask-login = "*"
+pipenv = "*"
 
 [requires]
 python_version = "3.8"
