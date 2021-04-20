@@ -76,6 +76,7 @@ def logout():
 def login():
     body = request.form.getlist('active')
     password = os.environ.get("ADMIN_PASS")
+    db_url = os.environ.get("DB_URL")
     if body[0] == password:
         res = {'active': True}
         user = User.query.get(1)
@@ -84,7 +85,7 @@ def login():
             db.session.add(new)
             try: 
                 db.session.commit()
-                return redirect("http://0.0.0.0:3000/admin", code=302)
+                return redirect(db_url + "admin", code=302)
             except Exception as error:
                 db.session.rollback()
                 print(f"{error.args} {type(error)}")
@@ -95,7 +96,7 @@ def login():
             user.update_user(res)
             try: 
                 db.session.commit()
-                return redirect("http://0.0.0.0:3000/admin", code=302)
+                return redirect(db_url + "admin", code=302)
             except Exception as error:
                 db.session.rollback()
                 print(f"{error.args} {type(error)}")
