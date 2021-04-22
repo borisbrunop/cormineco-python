@@ -7,7 +7,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(80), unique=False, nullable=False)
-    active = db.Column(db.Boolean(), unique=False, nullable=False)
+    active = db.Column(db.Boolean(False), unique=False, nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
 
     def __init__(self, email, password, active):
